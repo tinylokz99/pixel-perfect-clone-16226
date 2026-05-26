@@ -4,9 +4,9 @@ import badgeCircle from "@/assets/badge-circle.png";
 import bottleHero from "@/assets/bottle-hero.png";
 import labelGlow from "@/assets/label-glow.png";
 import labelKlow from "@/assets/label-klow.png";
-import productBpc157 from "@/assets/product-bpc157-v2.jpg";
-import productGhkCu from "@/assets/product-ghkcu-v2.jpg";
-import productTb500 from "@/assets/product-tb500-v2.jpg";
+import productBpc157 from "@/assets/product-bpc157-v3.jpg";
+import productGhkCu from "@/assets/product-ghkcu-v3.jpg";
+import productTb500 from "@/assets/product-tb500-v3.jpg";
 
 const siteUrl = "https://pixel-perfect-clone-16226.lovable.app";
 
