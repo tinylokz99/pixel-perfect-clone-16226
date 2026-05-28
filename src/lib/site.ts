@@ -4,8 +4,8 @@ export const OWNER_WHATSAPP = "12097521112"; // E.164 without +
 export const OWNER_WHATSAPP_DISPLAY = "+1 (209) 752-1112";
 
 export const PAYMENT_METHODS = [
-  { id: "cashapp", label: "Cash App", handle: "$YourCashtag" },
-  { id: "venmo", label: "Venmo", handle: "@YourVenmo" },
+  { id: "cashapp", label: "Cash App", handle: "$retamotsc" },
+  { id: "venmo", label: "Venmo", handle: "Juan-Aguilar-686" },
   { id: "paypal", label: "PayPal", handle: "tinylokzja@gmail.com" },
   { id: "zelle", label: "Zelle", handle: "tinylokzja@gmail.com" },
 ] as const;
