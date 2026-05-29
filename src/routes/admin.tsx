@@ -175,6 +175,8 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
       setForm((f) => ({ ...f, coa_url: data.publicUrl }));
       toast.success("COA uploaded");
     } finally { setUploadingCoa(false); }
+  }
+
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setBusy(true);
