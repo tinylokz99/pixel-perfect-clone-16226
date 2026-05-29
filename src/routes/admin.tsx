@@ -233,6 +233,14 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
             {form.image_url && <button type="button" onClick={() => setForm({ ...form, image_url: "" })} className="text-xs text-destructive">Remove</button>}
           </div>
         </div>
+        <div className="text-sm sm:col-span-2">
+          <span className="block mb-1 text-foreground font-semibold">Certificate of Analysis (COA)</span>
+          <div className="flex items-center gap-3">
+            {form.coa_url && <a href={form.coa_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">View COA</a>}
+            <input type="file" accept=".pdf,image/*" onChange={(e) => e.target.files?.[0] && uploadCOA(e.target.files[0])} className="text-sm text-muted-foreground" />
+            {form.coa_url && <button type="button" onClick={() => setForm({ ...form, coa_url: "" })} className="text-xs text-destructive">Remove</button>}
+          </div>
+        </div>
       </div>
       <div className="flex gap-2">
         <button disabled={busy} className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60">{busy ? "Saving…" : editing ? "Save changes" : "Add product"}</button>
