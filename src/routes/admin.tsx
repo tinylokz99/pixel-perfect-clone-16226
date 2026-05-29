@@ -134,7 +134,6 @@ function ProductsManager({ products, onChange }: { products: Product[]; onChange
     </div>
   );
 }
-
 function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSaved: () => void; onCancel?: () => void }) {
   const [form, setForm] = useState({
     name: product?.name || "",
@@ -144,23 +143,39 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
     in_stock: product?.in_stock ?? true,
     is_kit: product?.is_kit ?? false,
     image_url: product?.image_url || "",
+    coa_url: product?.coa_url || "",
     sort_order: product?.sort_order ?? 100,
   });
   const [busy, setBusy] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const [uploadingCoa, setUploadingCoa] = useState(false);
   const editing = !!product;
 
   async function uploadImage(file: File) {
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const path = `${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: false, contentType: file.type });
-    if (error) { toast.error("Upload failed: " + error.message); return; }
-    const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-    setForm((f) => ({ ...f, image_url: data.publicUrl }));
-    toast.success("Image uploaded");
+    setUploadingImg(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `images/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: false, contentType: file.type });
+      if (error) { toast.error("Upload failed: " + error.message); return; }
+      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+      setForm((f) => ({ ...f, image_url: data.publicUrl }));
+      toast.success("Image uploaded");
+    } finally { setUploadingImg(false); }
   }
 
-  async function save(e: React.FormEvent) {
-    e.preventDefault();
+  async function uploadCOA(file: File) {
+    setUploadingCoa(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
+      const path = `coas/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("coa-documents").upload(path, file, { upsert: false, contentType: file.type });
+      if (error) { toast.error("COA upload failed: " + error.message); return; }
+      const { data } = supabase.storage.from("coa-documents").getPublicUrl(path);
+      setForm((f) => ({ ...f, coa_url: data.publicUrl }));
+      toast.success("COA uploaded");
+    } finally { setUploadingCoa(false); }
+  }
     setBusy(true);
     try {
       const payload = {
