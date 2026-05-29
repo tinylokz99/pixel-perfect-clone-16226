@@ -175,7 +175,8 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
       setForm((f) => ({ ...f, coa_url: data.publicUrl }));
       toast.success("COA uploaded");
     } finally { setUploadingCoa(false); }
-  }
+  async function save(e: React.FormEvent) {
+    e.preventDefault();
     setBusy(true);
     try {
       const payload = {
@@ -186,6 +187,7 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
         in_stock: form.in_stock,
         is_kit: form.is_kit,
         image_url: form.image_url || null,
+        coa_url: form.coa_url || null,
         sort_order: form.sort_order,
         updated_at: new Date().toISOString(),
       };
@@ -197,7 +199,7 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
         const { error } = await supabase.from("products").insert(payload);
         if (error) throw error;
         toast.success("Product added");
-        setForm({ name: "", slug: "", description: "", price_dollars: "", in_stock: true, is_kit: false, image_url: "", sort_order: 100 });
+        setForm({ name: "", slug: "", description: "", price_dollars: "", in_stock: true, is_kit: false, image_url: "", coa_url: "", sort_order: 100 });
       }
       onSaved();
       onCancel?.();
