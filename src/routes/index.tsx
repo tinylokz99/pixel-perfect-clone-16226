@@ -32,6 +32,7 @@ type Product = {
   price_cents: number;
   in_stock: boolean;
   image_url: string | null;
+  coa_url: string | null;
   is_kit: boolean;
 };
 
