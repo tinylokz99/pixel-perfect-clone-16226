@@ -61,6 +61,7 @@ export type Database = {
       }
       products: {
         Row: {
+          coa_url: string | null
           created_at: string
           description: string | null
           id: string
@@ -74,6 +75,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          coa_url?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -87,6 +89,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          coa_url?: string | null
           created_at?: string
           description?: string | null
           id?: string

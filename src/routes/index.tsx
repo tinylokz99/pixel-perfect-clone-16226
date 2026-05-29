@@ -32,6 +32,7 @@ type Product = {
   price_cents: number;
   in_stock: boolean;
   image_url: string | null;
+  coa_url: string | null;
   is_kit: boolean;
 };
 
@@ -42,7 +43,7 @@ function Index() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id,name,slug,description,price_cents,in_stock,image_url,is_kit")
+        .select("id,name,slug,description,price_cents,in_stock,image_url,coa_url,is_kit")
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return data as Product[];
@@ -105,6 +106,12 @@ function Index() {
                     <div className="flex flex-1 flex-col p-5">
                       <h3 className="text-xl font-black uppercase text-foreground">{p.name}</h3>
                       {p.description && <p className="mt-2 text-sm leading-6 text-muted-foreground">{p.description}</p>}
+                      {p.coa_url && (
+                        <a href={p.coa_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex w-fit items-center gap-1 rounded-md border border-primary/30 px-2 py-1 text-xs font-semibold text-primary">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
+                          View COA
+                        </a>
+                      )}
                       <div className="mt-auto pt-5 flex items-center justify-between gap-3">
                         {p.is_kit ? (
                           <span className="text-sm font-bold uppercase tracking-wider text-primary">Price upon request</span>

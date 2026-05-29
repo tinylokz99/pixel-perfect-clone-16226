@@ -18,6 +18,7 @@ type Product = {
   price_cents: number;
   in_stock: boolean;
   image_url: string | null;
+  coa_url: string | null;
   sort_order: number;
   is_kit: boolean;
 };
@@ -133,7 +134,6 @@ function ProductsManager({ products, onChange }: { products: Product[]; onChange
     </div>
   );
 }
-
 function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSaved: () => void; onCancel?: () => void }) {
   const [form, setForm] = useState({
     name: product?.name || "",
@@ -143,19 +143,38 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
     in_stock: product?.in_stock ?? true,
     is_kit: product?.is_kit ?? false,
     image_url: product?.image_url || "",
+    coa_url: product?.coa_url || "",
     sort_order: product?.sort_order ?? 100,
   });
   const [busy, setBusy] = useState(false);
+  const [uploadingImg, setUploadingImg] = useState(false);
+  const [uploadingCoa, setUploadingCoa] = useState(false);
   const editing = !!product;
 
   async function uploadImage(file: File) {
-    const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const path = `${crypto.randomUUID()}.${ext}`;
-    const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: false, contentType: file.type });
-    if (error) { toast.error("Upload failed: " + error.message); return; }
-    const { data } = supabase.storage.from("product-images").getPublicUrl(path);
-    setForm((f) => ({ ...f, image_url: data.publicUrl }));
-    toast.success("Image uploaded");
+    setUploadingImg(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `images/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("product-images").upload(path, file, { upsert: false, contentType: file.type });
+      if (error) { toast.error("Upload failed: " + error.message); return; }
+      const { data } = supabase.storage.from("product-images").getPublicUrl(path);
+      setForm((f) => ({ ...f, image_url: data.publicUrl }));
+      toast.success("Image uploaded");
+    } finally { setUploadingImg(false); }
+  }
+
+  async function uploadCOA(file: File) {
+    setUploadingCoa(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "pdf";
+      const path = `coas/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("coa-documents").upload(path, file, { upsert: false, contentType: file.type });
+      if (error) { toast.error("COA upload failed: " + error.message); return; }
+      const { data } = supabase.storage.from("coa-documents").getPublicUrl(path);
+      setForm((f) => ({ ...f, coa_url: data.publicUrl }));
+      toast.success("COA uploaded");
+    } finally { setUploadingCoa(false); }
   }
 
   async function save(e: React.FormEvent) {
@@ -170,6 +189,7 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
         in_stock: form.in_stock,
         is_kit: form.is_kit,
         image_url: form.image_url || null,
+        coa_url: form.coa_url || null,
         sort_order: form.sort_order,
         updated_at: new Date().toISOString(),
       };
@@ -181,7 +201,7 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
         const { error } = await supabase.from("products").insert(payload);
         if (error) throw error;
         toast.success("Product added");
-        setForm({ name: "", slug: "", description: "", price_dollars: "", in_stock: true, is_kit: false, image_url: "", sort_order: 100 });
+        setForm({ name: "", slug: "", description: "", price_dollars: "", in_stock: true, is_kit: false, image_url: "", coa_url: "", sort_order: 100 });
       }
       onSaved();
       onCancel?.();
@@ -211,6 +231,14 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
             {form.image_url && <img src={form.image_url} alt="" className="h-16 w-16 rounded border border-border object-cover" />}
             <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && uploadImage(e.target.files[0])} className="text-sm text-muted-foreground" />
             {form.image_url && <button type="button" onClick={() => setForm({ ...form, image_url: "" })} className="text-xs text-destructive">Remove</button>}
+          </div>
+        </div>
+        <div className="text-sm sm:col-span-2">
+          <span className="block mb-1 text-foreground font-semibold">Certificate of Analysis (COA)</span>
+          <div className="flex items-center gap-3">
+            {form.coa_url && <a href={form.coa_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">View COA</a>}
+            <input type="file" accept=".pdf,image/*" onChange={(e) => e.target.files?.[0] && uploadCOA(e.target.files[0])} className="text-sm text-muted-foreground" />
+            {form.coa_url && <button type="button" onClick={() => setForm({ ...form, coa_url: "" })} className="text-xs text-destructive">Remove</button>}
           </div>
         </div>
       </div>
