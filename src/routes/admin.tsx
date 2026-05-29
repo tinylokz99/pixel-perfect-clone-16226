@@ -18,6 +18,7 @@ type Product = {
   price_cents: number;
   in_stock: boolean;
   image_url: string | null;
+  coa_url: string | null;
   sort_order: number;
   is_kit: boolean;
 };
