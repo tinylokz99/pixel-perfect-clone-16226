@@ -78,7 +78,7 @@ function AdminPage() {
 function AdminDashboard() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"products" | "orders">("products");
+  const [tab, setTab] = useState<"products" | "orders" | "settings">("products");
 
   const { data: products } = useQuery({
     queryKey: ["admin-products"],
@@ -105,17 +105,19 @@ function AdminDashboard() {
         <button onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }} className="inline-flex h-9 items-center rounded-md border border-border bg-card px-3 text-sm">Sign out</button>
       </div>
       <div className="mt-6 inline-flex rounded-md border border-border bg-card p-1">
-        {(["products", "orders"] as const).map((t) => (
+        {(["products", "orders", "settings"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 text-sm font-semibold rounded ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-            {t === "products" ? "Products" : `Orders (${orders?.length || 0})`}
+            {t === "products" ? "Products" : t === "orders" ? `Orders (${orders?.length || 0})` : "Settings"}
           </button>
         ))}
       </div>
 
       {tab === "products" ? (
         <ProductsManager products={products || []} onChange={() => qc.invalidateQueries({ queryKey: ["admin-products"] })} />
-      ) : (
+      ) : tab === "orders" ? (
         <OrdersList orders={orders || []} onChange={() => qc.invalidateQueries({ queryKey: ["admin-orders"] })} />
+      ) : (
+        <SettingsPanel />
       )}
     </div>
   );
