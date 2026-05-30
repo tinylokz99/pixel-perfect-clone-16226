@@ -14,48 +14,87 @@ export type Database = {
   }
   public: {
     Tables: {
+      discount_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string
+          id: string
+          kind: string
+          value: number
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string
+          id?: string
+          kind: string
+          value: number
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          value?: number
+        }
+        Relationships: []
+      }
       orders: {
         Row: {
           created_at: string
           customer_email: string
           customer_name: string
           customer_phone: string | null
+          discount_cents: number
+          discount_code: string | null
           id: string
           items: Json
           notes: string | null
           order_number: string
           payment_method: string
           shipping_address: string | null
+          shipping_cents: number
           status: string
           subtotal_cents: number
+          total_cents: number
         }
         Insert: {
           created_at?: string
           customer_email: string
           customer_name: string
           customer_phone?: string | null
+          discount_cents?: number
+          discount_code?: string | null
           id?: string
           items: Json
           notes?: string | null
           order_number?: string
           payment_method: string
           shipping_address?: string | null
+          shipping_cents?: number
           status?: string
           subtotal_cents: number
+          total_cents?: number
         }
         Update: {
           created_at?: string
           customer_email?: string
           customer_name?: string
           customer_phone?: string | null
+          discount_cents?: number
+          discount_code?: string | null
           id?: string
           items?: Json
           notes?: string | null
           order_number?: string
           payment_method?: string
           shipping_address?: string | null
+          shipping_cents?: number
           status?: string
           subtotal_cents?: number
+          total_cents?: number
         }
         Relationships: []
       }
@@ -100,6 +139,30 @@ export type Database = {
           price_cents?: number
           slug?: string
           sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      store_settings: {
+        Row: {
+          discounts_enabled: boolean
+          id: number
+          shipping_cents: number
+          shipping_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          discounts_enabled?: boolean
+          id?: number
+          shipping_cents?: number
+          shipping_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          discounts_enabled?: boolean
+          id?: number
+          shipping_cents?: number
+          shipping_enabled?: boolean
           updated_at?: string
         }
         Relationships: []
