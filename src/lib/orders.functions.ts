@@ -17,6 +17,7 @@ const InputSchema = z.object({
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
   payment_method: z.enum(["cashapp", "venmo", "paypal", "zelle"]),
   items: z.array(ItemSchema).min(1).max(50),
+  discount_code: z.string().trim().max(60).optional().or(z.literal("")),
 });
 
 export const createOrder = createServerFn({ method: "POST" })
@@ -24,6 +25,33 @@ export const createOrder = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const subtotal_cents = data.items.reduce((s, i) => s + i.price_cents * i.quantity, 0);
     if (subtotal_cents <= 0) throw new Error("Invalid order total");
+
+    const { data: settings } = await supabaseAdmin
+      .from("store_settings")
+      .select("shipping_enabled, shipping_cents, discounts_enabled")
+      .eq("id", 1)
+      .single();
+
+    const shipping_cents = settings?.shipping_enabled ? (settings.shipping_cents ?? 0) : 0;
+
+    let discount_cents = 0;
+    let discount_code: string | null = null;
+    const rawCode = (data.discount_code || "").trim();
+    if (rawCode && settings?.discounts_enabled) {
+      const { data: code } = await supabaseAdmin
+        .from("discount_codes")
+        .select("code, kind, value, active")
+        .ilike("code", rawCode)
+        .eq("active", true)
+        .maybeSingle();
+      if (!code) throw new Error("Invalid or inactive discount code");
+      discount_code = code.code;
+      discount_cents = code.kind === "percent"
+        ? Math.min(subtotal_cents, Math.round((subtotal_cents * code.value) / 100))
+        : Math.min(subtotal_cents, code.value);
+    }
+
+    const total_cents = Math.max(0, subtotal_cents - discount_cents) + shipping_cents;
 
     const { data: order, error } = await supabaseAdmin
       .from("orders")
@@ -36,6 +64,10 @@ export const createOrder = createServerFn({ method: "POST" })
         payment_method: data.payment_method,
         items: data.items,
         subtotal_cents,
+        shipping_cents,
+        discount_code,
+        discount_cents,
+        total_cents,
       })
       .select("id, order_number, created_at")
       .single();
