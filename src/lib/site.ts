@@ -1,4 +1,4 @@
-export const SITE_NAME = "Jalapeño Peptides";
+export const SITE_NAME = "Jalapeno Peptides";
 export const OWNER_EMAIL = "tinylokzja@gmail.com";
 export const OWNER_WHATSAPP = "12097521112"; // E.164 without +
 export const OWNER_WHATSAPP_DISPLAY = "+1 (209) 752-1112";

@@ -3,7 +3,7 @@ import { useCart } from "@/lib/cart";
 import { formatPrice } from "@/lib/site";
 
 export const Route = createFileRoute("/cart")({
-  head: () => ({ meta: [{ title: "Cart | Jalapeño Peptides" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Cart | Jalapeno Peptides" }, { name: "robots", content: "noindex" }] }),
   component: CartPage,
 });
 

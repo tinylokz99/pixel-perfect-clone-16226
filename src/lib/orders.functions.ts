@@ -17,6 +17,7 @@ const InputSchema = z.object({
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
   payment_method: z.enum(["cashapp", "venmo", "paypal", "zelle"]),
   items: z.array(ItemSchema).min(1).max(50),
+  discount_code: z.string().trim().max(60).optional().or(z.literal("")),
 });
 
 export const createOrder = createServerFn({ method: "POST" })
@@ -24,6 +25,33 @@ export const createOrder = createServerFn({ method: "POST" })
   .handler(async ({ data }) => {
     const subtotal_cents = data.items.reduce((s, i) => s + i.price_cents * i.quantity, 0);
     if (subtotal_cents <= 0) throw new Error("Invalid order total");
+
+    const { data: settings } = await supabaseAdmin
+      .from("store_settings")
+      .select("shipping_enabled, shipping_cents, discounts_enabled")
+      .eq("id", 1)
+      .single();
+
+    const shipping_cents = settings?.shipping_enabled ? (settings.shipping_cents ?? 0) : 0;
+
+    let discount_cents = 0;
+    let discount_code: string | null = null;
+    const rawCode = (data.discount_code || "").trim();
+    if (rawCode && settings?.discounts_enabled) {
+      const { data: code } = await supabaseAdmin
+        .from("discount_codes")
+        .select("code, kind, value, active")
+        .ilike("code", rawCode)
+        .eq("active", true)
+        .maybeSingle();
+      if (!code) throw new Error("Invalid or inactive discount code");
+      discount_code = code.code;
+      discount_cents = code.kind === "percent"
+        ? Math.min(subtotal_cents, Math.round((subtotal_cents * code.value) / 100))
+        : Math.min(subtotal_cents, code.value);
+    }
+
+    const total_cents = Math.max(0, subtotal_cents - discount_cents) + shipping_cents;
 
     const { data: order, error } = await supabaseAdmin
       .from("orders")
@@ -36,6 +64,10 @@ export const createOrder = createServerFn({ method: "POST" })
         payment_method: data.payment_method,
         items: data.items,
         subtotal_cents,
+        shipping_cents,
+        discount_code,
+        discount_cents,
+        total_cents,
       })
       .select("id, order_number, created_at")
       .single();
@@ -64,7 +96,12 @@ export const createOrder = createServerFn({ method: "POST" })
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
             <thead><tr><th align="left" style="padding:6px 12px;background:#f6f6f6">Item</th><th style="padding:6px 12px;background:#f6f6f6">Qty</th><th align="right" style="padding:6px 12px;background:#f6f6f6">Total</th></tr></thead>
             <tbody>${itemsHtml}</tbody>
-            <tfoot><tr><td colspan="2" align="right" style="padding:8px 12px;font-weight:bold">Subtotal</td><td align="right" style="padding:8px 12px;font-weight:bold">$${(subtotal_cents / 100).toFixed(2)}</td></tr></tfoot>
+            <tfoot>
+              <tr><td colspan="2" align="right" style="padding:6px 12px">Subtotal</td><td align="right" style="padding:6px 12px">$${(subtotal_cents / 100).toFixed(2)}</td></tr>
+              ${discount_cents > 0 ? `<tr><td colspan="2" align="right" style="padding:6px 12px;color:#16a34a">Discount${discount_code ? ` (${escapeHtml(discount_code)})` : ""}</td><td align="right" style="padding:6px 12px;color:#16a34a">−$${(discount_cents / 100).toFixed(2)}</td></tr>` : ""}
+              ${shipping_cents > 0 ? `<tr><td colspan="2" align="right" style="padding:6px 12px">Shipping &amp; handling</td><td align="right" style="padding:6px 12px">$${(shipping_cents / 100).toFixed(2)}</td></tr>` : ""}
+              <tr><td colspan="2" align="right" style="padding:8px 12px;font-weight:bold;border-top:1px solid #ccc">Total</td><td align="right" style="padding:8px 12px;font-weight:bold;border-top:1px solid #ccc">$${(total_cents / 100).toFixed(2)}</td></tr>
+            </tfoot>
           </table>
           <h3 style="margin:16px 0 4px">Customer</h3>
           <p style="margin:0">${escapeHtml(data.customer_name)}<br/>${escapeHtml(data.customer_email)}${data.customer_phone ? `<br/>${escapeHtml(data.customer_phone)}` : ""}</p>
@@ -80,10 +117,10 @@ export const createOrder = createServerFn({ method: "POST" })
             Authorization: `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "Jalapeño Peptides <onboarding@resend.dev>",
+            from: "Jalapeno Peptides <onboarding@resend.dev>",
             to: ["tinylokzja@gmail.com"],
             reply_to: data.customer_email,
-            subject: `New order ${order.order_number} — ${data.payment_method.toUpperCase()} — $${(subtotal_cents / 100).toFixed(2)}`,
+            subject: `New order ${order.order_number} — ${data.payment_method.toUpperCase()} — $${(total_cents / 100).toFixed(2)}`,
             html,
           }),
         });

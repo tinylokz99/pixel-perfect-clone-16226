@@ -1,5 +1,7 @@
-import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/lib/cart";
 import { formatPrice, OWNER_EMAIL, OWNER_WHATSAPP_DISPLAY, PAYMENT_METHODS, type PaymentMethodId, whatsappLink } from "@/lib/site";
 import { createOrder } from "@/lib/orders.functions";
@@ -17,15 +19,19 @@ const QR: Record<PaymentMethodId, string> = {
 };
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "Checkout | Jalapeño Peptides" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Checkout | Jalapeno Peptides" }, { name: "robots", content: "noindex" }] }),
   component: Checkout,
 });
 
+type DiscountState =
+  | { status: "idle" }
+  | { status: "invalid"; message: string }
+  | { status: "valid"; code: string; kind: "percent" | "fixed"; value: number };
+
 function Checkout() {
   const { items, subtotal, clear } = useCart();
-  const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
-  const [confirmation, setConfirmation] = useState<{ orderNumber: string; method: PaymentMethodId } | null>(null);
+  const [confirmation, setConfirmation] = useState<{ orderNumber: string; method: PaymentMethodId; total: number } | null>(null);
   const [form, setForm] = useState({
     customer_name: "",
     customer_email: "",
@@ -34,6 +40,58 @@ function Checkout() {
     notes: "",
     payment_method: "cashapp" as PaymentMethodId,
   });
+  const [codeInput, setCodeInput] = useState("");
+  const [discount, setDiscount] = useState<DiscountState>({ status: "idle" });
+  const [checkingCode, setCheckingCode] = useState(false);
+
+  const { data: settings } = useQuery({
+    queryKey: ["store-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_settings")
+        .select("shipping_enabled, shipping_cents, discounts_enabled")
+        .eq("id", 1)
+        .maybeSingle();
+      if (error) throw error;
+      return data ?? { shipping_enabled: false, shipping_cents: 0, discounts_enabled: false };
+    },
+  });
+
+  const shippingCents = settings?.shipping_enabled ? settings.shipping_cents : 0;
+  const discountsOn = !!settings?.discounts_enabled;
+
+  const discountCents = useMemo(() => {
+    if (discount.status !== "valid") return 0;
+    if (discount.kind === "percent") return Math.min(subtotal, Math.round((subtotal * discount.value) / 100));
+    return Math.min(subtotal, discount.value);
+  }, [discount, subtotal]);
+
+  const total = Math.max(0, subtotal - discountCents) + shippingCents;
+
+  async function applyCode() {
+    const code = codeInput.trim();
+    if (!code) return;
+    setCheckingCode(true);
+    try {
+      const { data, error } = await supabase
+        .from("discount_codes")
+        .select("code, kind, value, active")
+        .ilike("code", code)
+        .eq("active", true)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) {
+        setDiscount({ status: "invalid", message: "Code not found or inactive" });
+        return;
+      }
+      setDiscount({ status: "valid", code: data.code, kind: data.kind as "percent" | "fixed", value: data.value });
+      toast.success(`Code ${data.code} applied`);
+    } catch (e: any) {
+      setDiscount({ status: "invalid", message: e?.message || "Could not check code" });
+    } finally {
+      setCheckingCode(false);
+    }
+  }
 
   if (confirmation) {
     const method = PAYMENT_METHODS.find((m) => m.id === confirmation.method)!;
@@ -43,7 +101,7 @@ function Checkout() {
         <div className="rounded-[18px] border border-border bg-card/70 p-8 text-center">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-primary">Order received</p>
           <h1 className="mt-2 text-3xl font-black text-foreground">{confirmation.orderNumber}</h1>
-          <p className="mt-3 text-muted-foreground">Scan the QR below and pay <strong className="text-foreground">{formatPrice(subtotal || 0)}</strong> via <strong className="text-foreground">{method.label}</strong>. Include the order number in the payment note.</p>
+          <p className="mt-3 text-muted-foreground">Scan the QR below and pay <strong className="text-foreground">{formatPrice(confirmation.total)}</strong> via <strong className="text-foreground">{method.label}</strong>. Include the order number in the payment note.</p>
           <div className="mt-6 inline-block rounded-[14px] border border-border bg-background p-4">
             <img src={QR[confirmation.method]} alt={`${method.label} QR code`} className="mx-auto h-64 w-64 object-contain" />
             <p className="mt-3 text-sm text-muted-foreground">{method.label}: <span className="font-mono text-foreground">{method.handle}</span></p>
@@ -75,6 +133,7 @@ function Checkout() {
       const result = await createOrder({
         data: {
           ...form,
+          discount_code: discount.status === "valid" ? discount.code : "",
           items: items.map((i) => ({
             productId: i.productId,
             name: i.name,
@@ -83,7 +142,7 @@ function Checkout() {
           })),
         },
       });
-      setConfirmation({ orderNumber: result.order_number, method: form.payment_method });
+      setConfirmation({ orderNumber: result.order_number, method: form.payment_method, total });
     } catch (err: any) {
       toast.error(err?.message || "Could not place order");
     } finally {
@@ -135,7 +194,7 @@ function Checkout() {
           </div>
 
           <button disabled={submitting} type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary px-6 text-sm font-semibold text-primary-foreground disabled:opacity-60">
-            {submitting ? "Placing order…" : `Place order · ${formatPrice(subtotal)}`}
+            {submitting ? "Placing order…" : `Place order · ${formatPrice(total)}`}
           </button>
         </form>
 
@@ -149,9 +208,37 @@ function Checkout() {
               </li>
             ))}
           </ul>
+
+          {discountsOn && (
+            <div className="mt-5 border-t border-border pt-4">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Discount code</p>
+              <div className="flex gap-2">
+                <input
+                  value={codeInput}
+                  onChange={(e) => { setCodeInput(e.target.value); if (discount.status !== "idle") setDiscount({ status: "idle" }); }}
+                  placeholder="Enter code"
+                  className={inputCls}
+                  maxLength={60}
+                />
+                <button type="button" disabled={checkingCode || !codeInput.trim()} onClick={applyCode} className="inline-flex h-9 items-center justify-center rounded-md border border-border bg-background px-3 text-xs font-semibold disabled:opacity-50">
+                  {checkingCode ? "…" : "Apply"}
+                </button>
+              </div>
+              {discount.status === "valid" && (
+                <p className="mt-2 text-xs text-emerald-400">Code {discount.code} applied ({discount.kind === "percent" ? `${discount.value}% off` : `${formatPrice(discount.value)} off`})</p>
+              )}
+              {discount.status === "invalid" && <p className="mt-2 text-xs text-destructive">{discount.message}</p>}
+            </div>
+          )}
+
+          <div className="mt-4 space-y-1 border-t border-border pt-4 text-sm">
+            <div className="flex justify-between"><span className="text-muted-foreground">Subtotal</span><span className="text-foreground">{formatPrice(subtotal)}</span></div>
+            {discountCents > 0 && <div className="flex justify-between text-emerald-400"><span>Discount</span><span>−{formatPrice(discountCents)}</span></div>}
+            {shippingCents > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Shipping &amp; handling</span><span className="text-foreground">{formatPrice(shippingCents)}</span></div>}
+          </div>
           <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
             <span className="text-sm uppercase tracking-wider text-muted-foreground">Total</span>
-            <span className="text-2xl font-black text-foreground">{formatPrice(subtotal)}</span>
+            <span className="text-2xl font-black text-foreground">{formatPrice(total)}</span>
           </div>
         </aside>
       </div>

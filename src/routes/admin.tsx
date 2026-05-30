@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { formatPrice } from "@/lib/site";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin | Jalapeño Peptides" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Admin | Jalapeno Peptides" }, { name: "robots", content: "noindex" }] }),
   component: AdminPage,
 });
 
@@ -78,7 +78,7 @@ function AdminPage() {
 function AdminDashboard() {
   const qc = useQueryClient();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<"products" | "orders">("products");
+  const [tab, setTab] = useState<"products" | "orders" | "settings">("products");
 
   const { data: products } = useQuery({
     queryKey: ["admin-products"],
@@ -105,17 +105,19 @@ function AdminDashboard() {
         <button onClick={async () => { await supabase.auth.signOut(); navigate({ to: "/" }); }} className="inline-flex h-9 items-center rounded-md border border-border bg-card px-3 text-sm">Sign out</button>
       </div>
       <div className="mt-6 inline-flex rounded-md border border-border bg-card p-1">
-        {(["products", "orders"] as const).map((t) => (
+        {(["products", "orders", "settings"] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} className={`px-4 py-1.5 text-sm font-semibold rounded ${tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-            {t === "products" ? "Products" : `Orders (${orders?.length || 0})`}
+            {t === "products" ? "Products" : t === "orders" ? `Orders (${orders?.length || 0})` : "Settings"}
           </button>
         ))}
       </div>
 
       {tab === "products" ? (
         <ProductsManager products={products || []} onChange={() => qc.invalidateQueries({ queryKey: ["admin-products"] })} />
-      ) : (
+      ) : tab === "orders" ? (
         <OrdersList orders={orders || []} onChange={() => qc.invalidateQueries({ queryKey: ["admin-orders"] })} />
+      ) : (
+        <SettingsPanel />
       )}
     </div>
   );
@@ -342,6 +344,150 @@ function OrdersList({ orders, onChange }: { orders: Order[]; onChange: () => voi
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+function SettingsPanel() {
+  const qc = useQueryClient();
+  const { data: settings, isLoading } = useQuery({
+    queryKey: ["admin-store-settings"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("store_settings").select("*").eq("id", 1).maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: codes } = useQuery({
+    queryKey: ["admin-discount-codes"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("discount_codes").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      return data as DiscountCode[];
+    },
+  });
+
+  const [shippingDollars, setShippingDollars] = useState("");
+  const [shippingEnabled, setShippingEnabled] = useState(true);
+  const [discountsEnabled, setDiscountsEnabled] = useState(true);
+  const [savedOnce, setSavedOnce] = useState(false);
+
+  useEffect(() => {
+    if (settings && !savedOnce) {
+      setShippingDollars(((settings.shipping_cents ?? 0) / 100).toFixed(2));
+      setShippingEnabled(!!settings.shipping_enabled);
+      setDiscountsEnabled(!!settings.discounts_enabled);
+      setSavedOnce(true);
+    }
+  }, [settings, savedOnce]);
+
+  async function saveSettings() {
+    const cents = Math.round(parseFloat(shippingDollars || "0") * 100);
+    const { error } = await supabase.from("store_settings").update({
+      shipping_enabled: shippingEnabled,
+      shipping_cents: cents,
+      discounts_enabled: discountsEnabled,
+      updated_at: new Date().toISOString(),
+    }).eq("id", 1);
+    if (error) toast.error(error.message);
+    else { toast.success("Settings saved"); qc.invalidateQueries({ queryKey: ["admin-store-settings"] }); qc.invalidateQueries({ queryKey: ["store-settings"] }); }
+  }
+
+  if (isLoading) return <p className="mt-6 text-muted-foreground">Loading…</p>;
+
+  return (
+    <div className="mt-6 space-y-6">
+      <section className="rounded-[14px] border border-border bg-card/70 p-5 space-y-4">
+        <h2 className="text-lg font-black uppercase text-foreground">Shipping &amp; handling</h2>
+        <label className="flex items-center gap-3 text-sm">
+          <input type="checkbox" checked={shippingEnabled} onChange={(e) => setShippingEnabled(e.target.checked)} />
+          <span className="font-semibold text-foreground">Charge shipping at checkout</span>
+        </label>
+        <label className="block text-sm max-w-xs">
+          <span className="mb-1 block font-semibold text-foreground">Shipping fee (USD)</span>
+          <input type="number" step="0.01" min="0" value={shippingDollars} onChange={(e) => setShippingDollars(e.target.value)} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" />
+        </label>
+
+        <h2 className="text-lg font-black uppercase text-foreground pt-4 border-t border-border">Discount codes</h2>
+        <label className="flex items-center gap-3 text-sm">
+          <input type="checkbox" checked={discountsEnabled} onChange={(e) => setDiscountsEnabled(e.target.checked)} />
+          <span className="font-semibold text-foreground">Allow customers to use discount codes</span>
+        </label>
+
+        <button onClick={saveSettings} className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground">Save settings</button>
+      </section>
+
+      <section className="rounded-[14px] border border-border bg-card/70 p-5 space-y-4">
+        <h2 className="text-lg font-black uppercase text-foreground">Manage discount codes</h2>
+        <NewCodeForm onCreated={() => qc.invalidateQueries({ queryKey: ["admin-discount-codes"] })} />
+        <div className="space-y-2">
+          {(codes || []).map((c) => (
+            <CodeRow key={c.id} code={c} onChange={() => qc.invalidateQueries({ queryKey: ["admin-discount-codes"] })} />
+          ))}
+          {codes && codes.length === 0 && <p className="text-sm text-muted-foreground">No codes yet.</p>}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+type DiscountCode = { id: string; code: string; kind: "percent" | "fixed"; value: number; active: boolean };
+
+function NewCodeForm({ onCreated }: { onCreated: () => void }) {
+  const [code, setCode] = useState("");
+  const [kind, setKind] = useState<"percent" | "fixed">("percent");
+  const [value, setValue] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    try {
+      const v = kind === "percent" ? Math.round(parseFloat(value || "0")) : Math.round(parseFloat(value || "0") * 100);
+      if (v <= 0) { toast.error("Value must be greater than 0"); return; }
+      const { error } = await supabase.from("discount_codes").insert({ code: code.trim().toUpperCase(), kind, value: v, active: true });
+      if (error) { toast.error(error.message); return; }
+      toast.success("Code added");
+      setCode(""); setValue("");
+      onCreated();
+    } finally { setBusy(false); }
+  }
+
+  const inputCls = "rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground";
+
+  return (
+    <form onSubmit={submit} className="grid gap-3 sm:grid-cols-[1.2fr_1fr_1fr_auto]">
+      <input required maxLength={60} placeholder="CODE" value={code} onChange={(e) => setCode(e.target.value)} className={inputCls + " uppercase"} />
+      <select value={kind} onChange={(e) => setKind(e.target.value as "percent" | "fixed")} className={inputCls}>
+        <option value="percent">% off</option>
+        <option value="fixed">$ off</option>
+      </select>
+      <input required type="number" step={kind === "percent" ? "1" : "0.01"} min="0" placeholder={kind === "percent" ? "10" : "5.00"} value={value} onChange={(e) => setValue(e.target.value)} className={inputCls} />
+      <button disabled={busy} className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground disabled:opacity-60">Add</button>
+    </form>
+  );
+}
+
+function CodeRow({ code, onChange }: { code: DiscountCode; onChange: () => void }) {
+  async function toggle() {
+    const { error } = await supabase.from("discount_codes").update({ active: !code.active }).eq("id", code.id);
+    if (error) toast.error(error.message); else { toast.success(code.active ? "Disabled" : "Enabled"); onChange(); }
+  }
+  async function del() {
+    if (!confirm(`Delete code "${code.code}"?`)) return;
+    const { error } = await supabase.from("discount_codes").delete().eq("id", code.id);
+    if (error) toast.error(error.message); else { toast.success("Deleted"); onChange(); }
+  }
+  const valueLabel = code.kind === "percent" ? `${code.value}% off` : `${formatPrice(code.value)} off`;
+  return (
+    <div className="flex items-center gap-4 rounded-md border border-border bg-background p-3">
+      <div className="flex-1">
+        <p className="font-mono font-bold text-foreground">{code.code}</p>
+        <p className="text-xs text-muted-foreground">{valueLabel} · {code.active ? <span className="text-emerald-400">Active</span> : <span className="text-muted-foreground">Disabled</span>}</p>
+      </div>
+      <button onClick={toggle} className="h-9 rounded-md border border-border bg-card px-3 text-xs font-semibold">{code.active ? "Disable" : "Enable"}</button>
+      <button onClick={del} className="h-9 rounded-md border border-destructive/40 bg-destructive/10 px-3 text-xs font-semibold text-destructive">Delete</button>
     </div>
   );
 }

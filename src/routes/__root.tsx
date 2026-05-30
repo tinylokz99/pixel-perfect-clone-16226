@@ -55,7 +55,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Jalapeño Peptides" },
+      { property: "og:site_name", content: "Jalapeno Peptides" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [{ rel: "stylesheet", href: appCss }],
@@ -98,10 +98,10 @@ function SiteNav() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <Link to="/" className="flex min-w-0 items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-md border border-border bg-card">
-            <img src={badgeCircle} alt="Jalapeño Peptides" className="h-full w-full object-cover" width={64} height={64} />
+            <img src={badgeCircle} alt="Jalapeno Peptides" className="h-full w-full object-cover" width={64} height={64} />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-sm font-semibold uppercase tracking-[0.28em] text-foreground">Jalapeño Peptides</p>
+            <p className="truncate text-sm font-semibold uppercase tracking-[0.28em] text-foreground">Jalapeno Peptides</p>
             <p className="text-xs text-muted-foreground">Premium research compounds</p>
           </div>
         </Link>
