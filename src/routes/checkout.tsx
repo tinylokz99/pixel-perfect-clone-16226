@@ -17,7 +17,7 @@ const QR: Record<PaymentMethodId, string> = {
 };
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "Checkout | Jalapeño Peptides" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Checkout | Jalapeno Peptides" }, { name: "robots", content: "noindex" }] }),
   component: Checkout,
 });
 

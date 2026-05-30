@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { formatPrice } from "@/lib/site";
 
 export const Route = createFileRoute("/admin")({
-  head: () => ({ meta: [{ title: "Admin | Jalapeño Peptides" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Admin | Jalapeno Peptides" }, { name: "robots", content: "noindex" }] }),
   component: AdminPage,
 });
 

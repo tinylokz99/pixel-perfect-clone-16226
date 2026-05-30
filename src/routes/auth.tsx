@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { OWNER_EMAIL } from "@/lib/site";
 
 export const Route = createFileRoute("/auth")({
-  head: () => ({ meta: [{ title: "Sign in | Jalapeño Peptides" }, { name: "robots", content: "noindex" }] }),
+  head: () => ({ meta: [{ title: "Sign in | Jalapeno Peptides" }, { name: "robots", content: "noindex" }] }),
   component: AuthPage,
 });
 

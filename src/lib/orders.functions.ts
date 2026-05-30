@@ -80,7 +80,7 @@ export const createOrder = createServerFn({ method: "POST" })
             Authorization: `Bearer ${RESEND_API_KEY}`,
           },
           body: JSON.stringify({
-            from: "Jalapeño Peptides <onboarding@resend.dev>",
+            from: "Jalapeno Peptides <onboarding@resend.dev>",
             to: ["tinylokzja@gmail.com"],
             reply_to: data.customer_email,
             subject: `New order ${order.order_number} — ${data.payment_method.toUpperCase()} — $${(subtotal_cents / 100).toFixed(2)}`,

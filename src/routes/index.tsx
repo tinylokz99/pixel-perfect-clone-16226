@@ -12,9 +12,9 @@ const siteUrl = "https://pixel-perfect-clone-16226.lovable.app";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Jalapeño Peptides | Premium Research Peptides" },
+      { title: "Jalapeno Peptides | Premium Research Peptides" },
       { name: "description", content: "Premium research peptides for laboratory research purposes only." },
-      { property: "og:title", content: "Jalapeño Peptides | Premium Research Peptides" },
+      { property: "og:title", content: "Jalapeno Peptides | Premium Research Peptides" },
       { property: "og:description", content: "Premium research peptides for laboratory research purposes only." },
       { property: "og:url", content: siteUrl },
       { property: "og:image", content: `${siteUrl}${bottleHero}` },
@@ -71,7 +71,7 @@ function Index() {
               </div>
             </div>
             <div className="relative z-10">
-              <img src={bottleHero} alt="Jalapeño Peptides bottle" className="mx-auto max-h-[640px] w-full object-contain" />
+              <img src={bottleHero} alt="Jalapeno Peptides bottle" className="mx-auto max-h-[640px] w-full object-contain" />
             </div>
           </div>
         </section>
@@ -158,7 +158,7 @@ function Index() {
             <h2 className="mt-3 text-3xl font-black uppercase text-foreground">Get in touch</h2>
             <p className="mt-3 text-muted-foreground">Questions, kit pricing, or order status — message anytime.</p>
             <div className="mt-8 grid gap-4 sm:grid-cols-2">
-              <a href={whatsappLink("Hi! I have a question about Jalapeño Peptides.")} target="_blank" rel="noreferrer" className="rounded-[18px] border border-border bg-card/70 p-6 text-left transition hover:border-primary/45">
+              <a href={whatsappLink("Hi! I have a question about Jalapeno Peptides.")} target="_blank" rel="noreferrer" className="rounded-[18px] border border-border bg-card/70 p-6 text-left transition hover:border-primary/45">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">WhatsApp</p>
                 <p className="mt-2 text-lg font-bold text-foreground">{OWNER_WHATSAPP_DISPLAY}</p>
                 <p className="mt-1 text-sm text-muted-foreground">Tap to open WhatsApp chat</p>
@@ -177,7 +177,7 @@ function Index() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <img src={badgeCircle} alt="" className="h-8 w-8 rounded" />
-            <p className="text-sm text-muted-foreground">© Jalapeño Peptides · Research use only</p>
+            <p className="text-sm text-muted-foreground">© Jalapeno Peptides · Research use only</p>
           </div>
           <div className="flex gap-4 text-sm text-muted-foreground">
             <Link to="/cart" className="hover:text-foreground">Cart</Link>
