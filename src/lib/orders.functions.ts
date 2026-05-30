@@ -96,7 +96,12 @@ export const createOrder = createServerFn({ method: "POST" })
           <table style="width:100%;border-collapse:collapse;margin-bottom:16px">
             <thead><tr><th align="left" style="padding:6px 12px;background:#f6f6f6">Item</th><th style="padding:6px 12px;background:#f6f6f6">Qty</th><th align="right" style="padding:6px 12px;background:#f6f6f6">Total</th></tr></thead>
             <tbody>${itemsHtml}</tbody>
-            <tfoot><tr><td colspan="2" align="right" style="padding:8px 12px;font-weight:bold">Subtotal</td><td align="right" style="padding:8px 12px;font-weight:bold">$${(subtotal_cents / 100).toFixed(2)}</td></tr></tfoot>
+            <tfoot>
+              <tr><td colspan="2" align="right" style="padding:6px 12px">Subtotal</td><td align="right" style="padding:6px 12px">$${(subtotal_cents / 100).toFixed(2)}</td></tr>
+              ${discount_cents > 0 ? `<tr><td colspan="2" align="right" style="padding:6px 12px;color:#16a34a">Discount${discount_code ? ` (${escapeHtml(discount_code)})` : ""}</td><td align="right" style="padding:6px 12px;color:#16a34a">−$${(discount_cents / 100).toFixed(2)}</td></tr>` : ""}
+              ${shipping_cents > 0 ? `<tr><td colspan="2" align="right" style="padding:6px 12px">Shipping &amp; handling</td><td align="right" style="padding:6px 12px">$${(shipping_cents / 100).toFixed(2)}</td></tr>` : ""}
+              <tr><td colspan="2" align="right" style="padding:8px 12px;font-weight:bold;border-top:1px solid #ccc">Total</td><td align="right" style="padding:8px 12px;font-weight:bold;border-top:1px solid #ccc">$${(total_cents / 100).toFixed(2)}</td></tr>
+            </tfoot>
           </table>
           <h3 style="margin:16px 0 4px">Customer</h3>
           <p style="margin:0">${escapeHtml(data.customer_name)}<br/>${escapeHtml(data.customer_email)}${data.customer_phone ? `<br/>${escapeHtml(data.customer_phone)}` : ""}</p>
