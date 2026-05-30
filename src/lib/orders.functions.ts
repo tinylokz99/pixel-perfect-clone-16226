@@ -120,7 +120,7 @@ export const createOrder = createServerFn({ method: "POST" })
             from: "Jalapeno Peptides <onboarding@resend.dev>",
             to: ["tinylokzja@gmail.com"],
             reply_to: data.customer_email,
-            subject: `New order ${order.order_number} — ${data.payment_method.toUpperCase()} — $${(subtotal_cents / 100).toFixed(2)}`,
+            subject: `New order ${order.order_number} — ${data.payment_method.toUpperCase()} — $${(total_cents / 100).toFixed(2)}`,
             html,
           }),
         });
