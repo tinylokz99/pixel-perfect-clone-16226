@@ -71,6 +71,10 @@ function Checkout() {
   async function applyCode() {
     const code = codeInput.trim();
     if (!code) return;
+    if (!discountsOn) {
+      setDiscount({ status: "invalid", message: "Discount codes are currently disabled" });
+      return;
+    }
     setCheckingCode(true);
     try {
       const { data, error } = await supabase
