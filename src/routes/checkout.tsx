@@ -33,6 +33,8 @@ function Checkout() {
   const { items, subtotal, clear } = useCart();
   const [submitting, setSubmitting] = useState(false);
   const [confirmation, setConfirmation] = useState<{ orderNumber: string; method: PaymentMethodId; total: number } | null>(null);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [form, setForm] = useState({
     customer_name: "",
     customer_email: "",
