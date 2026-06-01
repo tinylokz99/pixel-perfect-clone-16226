@@ -127,6 +127,10 @@ function Checkout() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!ageConfirmed || !termsAccepted) {
+      toast.error("Please confirm you are 18+ and accept the research-use-only terms.");
+      return;
+    }
     setSubmitting(true);
     try {
       const result = await createOrder({
