@@ -371,6 +371,7 @@ function SettingsPanel() {
   const [shippingDollars, setShippingDollars] = useState("");
   const [shippingEnabled, setShippingEnabled] = useState(true);
   const [discountsEnabled, setDiscountsEnabled] = useState(true);
+  const [invoiceRecipients, setInvoiceRecipients] = useState("");
   const [savedOnce, setSavedOnce] = useState(false);
 
   useEffect(() => {
@@ -378,21 +379,32 @@ function SettingsPanel() {
       setShippingDollars(((settings.shipping_cents ?? 0) / 100).toFixed(2));
       setShippingEnabled(!!settings.shipping_enabled);
       setDiscountsEnabled(!!settings.discounts_enabled);
+      setInvoiceRecipients(((settings as any).invoice_recipients ?? []).join(", "));
       setSavedOnce(true);
     }
   }, [settings, savedOnce]);
 
   async function saveSettings() {
     const cents = Math.round(parseFloat(shippingDollars || "0") * 100);
+    const emails = invoiceRecipients
+      .split(/[\s,;]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const invalid = emails.filter((e) => !emailRe.test(e));
+    if (invalid.length) { toast.error(`Invalid email(s): ${invalid.join(", ")}`); return; }
+    if (emails.length === 0) { toast.error("Add at least one invoice recipient email"); return; }
     const { error } = await supabase.from("store_settings").update({
       shipping_enabled: shippingEnabled,
       shipping_cents: cents,
       discounts_enabled: discountsEnabled,
+      invoice_recipients: emails,
       updated_at: new Date().toISOString(),
-    }).eq("id", 1);
+    } as any).eq("id", 1);
     if (error) toast.error(error.message);
     else { toast.success("Settings saved"); qc.invalidateQueries({ queryKey: ["admin-store-settings"] }); qc.invalidateQueries({ queryKey: ["store-settings"] }); }
   }
+
 
   if (isLoading) return <p className="mt-6 text-muted-foreground">Loading…</p>;
 
@@ -415,8 +427,22 @@ function SettingsPanel() {
           <span className="font-semibold text-foreground">Allow customers to use discount codes</span>
         </label>
 
+        <h2 className="text-lg font-black uppercase text-foreground pt-4 border-t border-border">Invoice notifications</h2>
+        <label className="block text-sm">
+          <span className="mb-1 block font-semibold text-foreground">Invoice recipient emails</span>
+          <textarea
+            rows={2}
+            value={invoiceRecipients}
+            onChange={(e) => setInvoiceRecipients(e.target.value)}
+            placeholder="owner@example.com, manager@example.com"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+          />
+          <span className="mt-1 block text-xs text-muted-foreground">Comma- or space-separated. These addresses receive the order invoice email when a customer checks out.</span>
+        </label>
+
         <button onClick={saveSettings} className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground">Save settings</button>
       </section>
+
 
       <section className="rounded-[14px] border border-border bg-card/70 p-5 space-y-4">
         <h2 className="text-lg font-black uppercase text-foreground">Manage discount codes</h2>

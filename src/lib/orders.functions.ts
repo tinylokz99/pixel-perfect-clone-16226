@@ -28,9 +28,10 @@ export const createOrder = createServerFn({ method: "POST" })
 
     const { data: settings } = await supabaseAdmin
       .from("store_settings")
-      .select("shipping_enabled, shipping_cents, discounts_enabled")
+      .select("shipping_enabled, shipping_cents, discounts_enabled, invoice_recipients")
       .eq("id", 1)
       .single();
+
 
     const shipping_cents = settings?.shipping_enabled ? (settings.shipping_cents ?? 0) : 0;
 
@@ -118,7 +119,7 @@ export const createOrder = createServerFn({ method: "POST" })
           },
           body: JSON.stringify({
             from: "Jalapeno Peptides <onboarding@resend.dev>",
-            to: ["tinylokzja@gmail.com"],
+            to: (settings?.invoice_recipients?.length ? settings.invoice_recipients : ["tinylokzja@gmail.com"]),
             reply_to: data.customer_email,
             subject: `New order ${order.order_number} — ${data.payment_method.toUpperCase()} — $${(total_cents / 100).toFixed(2)}`,
             html,

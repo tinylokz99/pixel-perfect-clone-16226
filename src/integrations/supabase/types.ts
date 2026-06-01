@@ -147,6 +147,7 @@ export type Database = {
         Row: {
           discounts_enabled: boolean
           id: number
+          invoice_recipients: string[]
           shipping_cents: number
           shipping_enabled: boolean
           updated_at: string
@@ -154,6 +155,7 @@ export type Database = {
         Insert: {
           discounts_enabled?: boolean
           id?: number
+          invoice_recipients?: string[]
           shipping_cents?: number
           shipping_enabled?: boolean
           updated_at?: string
@@ -161,6 +163,7 @@ export type Database = {
         Update: {
           discounts_enabled?: boolean
           id?: number
+          invoice_recipients?: string[]
           shipping_cents?: number
           shipping_enabled?: boolean
           updated_at?: string
