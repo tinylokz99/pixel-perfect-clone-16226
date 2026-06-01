@@ -33,6 +33,8 @@ function Checkout() {
   const { items, subtotal, clear } = useCart();
   const [submitting, setSubmitting] = useState(false);
   const [confirmation, setConfirmation] = useState<{ orderNumber: string; method: PaymentMethodId; total: number } | null>(null);
+  const [ageConfirmed, setAgeConfirmed] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [form, setForm] = useState({
     customer_name: "",
     customer_email: "",
@@ -125,6 +127,10 @@ function Checkout() {
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!ageConfirmed || !termsAccepted) {
+      toast.error("Please confirm you are 18+ and accept the research-use-only terms.");
+      return;
+    }
     setSubmitting(true);
     try {
       const result = await createOrder({
@@ -190,10 +196,23 @@ function Checkout() {
             <p className="mt-2 text-xs text-muted-foreground">You'll see a QR code to scan and pay on the next screen.</p>
           </div>
 
-          <button disabled={submitting} type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary px-6 text-sm font-semibold text-primary-foreground disabled:opacity-60">
+
+          <div className="space-y-3 rounded-md border border-border bg-background/50 p-3">
+            <label className="flex items-start gap-2 text-xs text-muted-foreground">
+              <input type="checkbox" required checked={ageConfirmed} onChange={(e) => setAgeConfirmed(e.target.checked)} className="mt-0.5 h-4 w-4 accent-primary" />
+              <span>I confirm I am <strong className="text-foreground">18 years of age or older</strong>.</span>
+            </label>
+            <label className="flex items-start gap-2 text-xs text-muted-foreground">
+              <input type="checkbox" required checked={termsAccepted} onChange={(e) => setTermsAccepted(e.target.checked)} className="mt-0.5 h-4 w-4 accent-primary" />
+              <span>I am a qualified researcher purchasing these products <strong className="text-foreground">strictly for laboratory and in-vitro research use only</strong>. They are <strong className="text-foreground">not for human or animal consumption</strong>, medical, veterinary, household, cosmetic, or any other use. I accept full responsibility for compliance with all applicable federal, state, and local laws.</span>
+            </label>
+          </div>
+
+          <button disabled={submitting || !ageConfirmed || !termsAccepted} type="submit" className="inline-flex h-12 w-full items-center justify-center rounded-md bg-primary px-6 text-sm font-semibold text-primary-foreground disabled:opacity-60">
             {submitting ? "Placing order…" : `Place order · ${formatPrice(total)}`}
           </button>
         </form>
+
 
         <aside className="h-fit rounded-[18px] border border-border bg-card/70 p-5">
           <h2 className="text-sm font-semibold uppercase tracking-[0.22em] text-muted-foreground">Order summary</h2>
