@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { CartProvider, useCart } from "@/lib/cart";
 import { Toaster } from "sonner";
 import badgeCircle from "@/assets/badge-circle.png";
+import { AgeGate } from "@/components/AgeGate";
 
 function NotFoundComponent() {
   return (
