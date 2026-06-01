@@ -87,6 +87,7 @@ function RootComponent() {
         <SiteNav />
         <Outlet />
         <Toaster theme="dark" richColors position="top-center" />
+        <AgeGate />
       </CartProvider>
     </QueryClientProvider>
   );
