@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/lib/cart";
 import { formatPrice, OWNER_EMAIL, OWNER_WHATSAPP_DISPLAY, PAYMENT_METHODS, type PaymentMethodId, whatsappLink } from "@/lib/site";
 import { createOrder } from "@/lib/orders.functions";
-import { resolveDiscountCode } from "@/lib/discount";
+import { validateDiscountCode } from "@/lib/discount.functions";
 import { toast } from "sonner";
 import qrCashapp from "@/assets/qr-cashapp.png";
 import qrVenmo from "@/assets/qr-venmo.png";
@@ -72,21 +72,19 @@ function Checkout() {
   const total = Math.max(0, subtotal - discountCents) + shippingCents;
 
   async function applyCode() {
-    if (!codeInput.trim()) return;
+    const trimmed = codeInput.trim();
+    if (!trimmed) return;
     setCheckingCode(true);
     try {
-      const result = await resolveDiscountCode(codeInput, discountsOn, async (code) => {
-        const { data, error } = await supabase
-          .from("discount_codes")
-          .select("code, kind, value, active")
-          .ilike("code", code)
-          .eq("active", true)
-          .maybeSingle();
-        return { data: data as any, error: error as any };
-      });
-      if (!result) return;
+      if (!discountsOn) {
+        setDiscount({ status: "invalid", message: "Discount codes are currently disabled" });
+        return;
+      }
+      const result = await validateDiscountCode({ data: { code: trimmed } });
       setDiscount(result);
       if (result.status === "valid") toast.success(`Code ${result.code} applied`);
+    } catch (e: any) {
+      setDiscount({ status: "invalid", message: e?.message || "Could not check code" });
     } finally {
       setCheckingCode(false);
     }
