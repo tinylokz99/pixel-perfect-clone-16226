@@ -233,6 +233,23 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
         <label className="text-sm"><span className="block mb-1 text-foreground font-semibold">Sort order</span><input type="number" className={inputCls} value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })} /></label>
         <label className="text-sm flex items-center gap-2 sm:col-span-1"><input type="checkbox" checked={form.in_stock} onChange={(e) => setForm({ ...form, in_stock: e.target.checked })} /> In stock</label>
         <label className="text-sm flex items-center gap-2 sm:col-span-1"><input type="checkbox" checked={form.is_kit} onChange={(e) => setForm({ ...form, is_kit: e.target.checked })} /> Kit (price upon request)</label>
+        <label className="text-sm sm:col-span-2">
+          <span className="block mb-1 text-foreground font-semibold">Inventory on hand</span>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            placeholder="Leave blank to not track inventory"
+            className={inputCls}
+            value={form.stock_quantity ?? ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              setForm({ ...form, stock_quantity: v === "" ? null : Math.max(0, Math.floor(Number(v))) });
+            }}
+          />
+          <span className="mt-1 block text-xs text-muted-foreground">When set, this number drops automatically as orders are placed. Reaches 0 → product is auto-marked out of stock.</span>
+        </label>
+
         <div className="text-sm sm:col-span-2">
           <span className="block mb-1 text-foreground font-semibold">Photo</span>
           <div className="flex items-center gap-3">
