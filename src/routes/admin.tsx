@@ -21,7 +21,9 @@ type Product = {
   coa_url: string | null;
   sort_order: number;
   is_kit: boolean;
+  stock_quantity: number | null;
 };
+
 
 type Order = {
   id: string;
@@ -147,7 +149,9 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
     image_url: product?.image_url || "",
     coa_url: product?.coa_url || "",
     sort_order: product?.sort_order ?? 100,
+    stock_quantity: product?.stock_quantity ?? null as number | null,
   });
+
   const [busy, setBusy] = useState(false);
   const [uploadingImg, setUploadingImg] = useState(false);
   const [uploadingCoa, setUploadingCoa] = useState(false);
@@ -193,6 +197,7 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
         image_url: form.image_url || null,
         coa_url: form.coa_url || null,
         sort_order: form.sort_order,
+        stock_quantity: form.stock_quantity,
         updated_at: new Date().toISOString(),
       };
       if (editing) {
@@ -203,8 +208,9 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
         const { error } = await supabase.from("products").insert(payload);
         if (error) throw error;
         toast.success("Product added");
-        setForm({ name: "", slug: "", description: "", price_dollars: "", in_stock: true, is_kit: false, image_url: "", coa_url: "", sort_order: 100 });
+        setForm({ name: "", slug: "", description: "", price_dollars: "", in_stock: true, is_kit: false, image_url: "", coa_url: "", sort_order: 100, stock_quantity: null });
       }
+
       onSaved();
       onCancel?.();
     } catch (err: any) {
@@ -227,6 +233,23 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
         <label className="text-sm"><span className="block mb-1 text-foreground font-semibold">Sort order</span><input type="number" className={inputCls} value={form.sort_order} onChange={(e) => setForm({ ...form, sort_order: Number(e.target.value) })} /></label>
         <label className="text-sm flex items-center gap-2 sm:col-span-1"><input type="checkbox" checked={form.in_stock} onChange={(e) => setForm({ ...form, in_stock: e.target.checked })} /> In stock</label>
         <label className="text-sm flex items-center gap-2 sm:col-span-1"><input type="checkbox" checked={form.is_kit} onChange={(e) => setForm({ ...form, is_kit: e.target.checked })} /> Kit (price upon request)</label>
+        <label className="text-sm sm:col-span-2">
+          <span className="block mb-1 text-foreground font-semibold">Inventory on hand</span>
+          <input
+            type="number"
+            min="0"
+            step="1"
+            placeholder="Leave blank to not track inventory"
+            className={inputCls}
+            value={form.stock_quantity ?? ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              setForm({ ...form, stock_quantity: v === "" ? null : Math.max(0, Math.floor(Number(v))) });
+            }}
+          />
+          <span className="mt-1 block text-xs text-muted-foreground">When set, this number drops automatically as orders are placed. Reaches 0 → product is auto-marked out of stock.</span>
+        </label>
+
         <div className="text-sm sm:col-span-2">
           <span className="block mb-1 text-foreground font-semibold">Photo</span>
           <div className="flex items-center gap-3">
@@ -282,7 +305,11 @@ function ProductRow({ product, onChange }: { product: Product; onChange: () => v
           <span className={product.in_stock ? "text-emerald-400 ml-1" : "text-destructive ml-1"}>
             {product.in_stock ? "In stock" : "Out of stock"}
           </span>
+          {product.stock_quantity !== null && (
+            <span className="ml-1 text-foreground">· {product.stock_quantity} on hand</span>
+          )}
         </p>
+
       </div>
       <div className="flex flex-wrap gap-2">
         <button onClick={toggleStock} className="h-9 rounded-md border border-border bg-background px-3 text-xs font-semibold">{product.in_stock ? "Mark out" : "Mark in"}</button>

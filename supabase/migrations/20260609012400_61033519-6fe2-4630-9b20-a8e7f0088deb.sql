@@ -1,0 +1,2 @@
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS stock_quantity integer;
+COMMENT ON COLUMN public.products.stock_quantity IS 'NULL = inventory not tracked. Integer = current units on hand; auto-decrements when orders are placed.';
