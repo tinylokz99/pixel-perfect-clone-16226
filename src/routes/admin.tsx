@@ -197,6 +197,7 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
         image_url: form.image_url || null,
         coa_url: form.coa_url || null,
         sort_order: form.sort_order,
+        stock_quantity: form.stock_quantity,
         updated_at: new Date().toISOString(),
       };
       if (editing) {
@@ -207,8 +208,9 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
         const { error } = await supabase.from("products").insert(payload);
         if (error) throw error;
         toast.success("Product added");
-        setForm({ name: "", slug: "", description: "", price_dollars: "", in_stock: true, is_kit: false, image_url: "", coa_url: "", sort_order: 100 });
+        setForm({ name: "", slug: "", description: "", price_dollars: "", in_stock: true, is_kit: false, image_url: "", coa_url: "", sort_order: 100, stock_quantity: null });
       }
+
       onSaved();
       onCancel?.();
     } catch (err: any) {
