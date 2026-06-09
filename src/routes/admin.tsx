@@ -149,7 +149,9 @@ function ProductEditor({ product, onSaved, onCancel }: { product?: Product; onSa
     image_url: product?.image_url || "",
     coa_url: product?.coa_url || "",
     sort_order: product?.sort_order ?? 100,
+    stock_quantity: product?.stock_quantity ?? null as number | null,
   });
+
   const [busy, setBusy] = useState(false);
   const [uploadingImg, setUploadingImg] = useState(false);
   const [uploadingCoa, setUploadingCoa] = useState(false);
