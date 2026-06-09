@@ -305,7 +305,11 @@ function ProductRow({ product, onChange }: { product: Product; onChange: () => v
           <span className={product.in_stock ? "text-emerald-400 ml-1" : "text-destructive ml-1"}>
             {product.in_stock ? "In stock" : "Out of stock"}
           </span>
+          {product.stock_quantity !== null && (
+            <span className="ml-1 text-foreground">· {product.stock_quantity} on hand</span>
+          )}
         </p>
+
       </div>
       <div className="flex flex-wrap gap-2">
         <button onClick={toggleStock} className="h-9 rounded-md border border-border bg-background px-3 text-xs font-semibold">{product.in_stock ? "Mark out" : "Mark in"}</button>
