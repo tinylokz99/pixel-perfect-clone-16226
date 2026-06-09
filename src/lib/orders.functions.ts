@@ -93,6 +93,17 @@ export const createOrder = createServerFn({ method: "POST" })
 
     if (error || !order) throw new Error(error?.message || "Could not create order");
 
+    // Decrement tracked inventory; auto-flip in_stock to false when units hit zero.
+    for (const item of data.items) {
+      const p = stockById.get(item.productId);
+      if (!p || p.stock_quantity === null) continue;
+      const next = Math.max(0, p.stock_quantity - item.quantity);
+      await supabaseAdmin
+        .from("products")
+        .update({ stock_quantity: next, in_stock: next > 0, updated_at: new Date().toISOString() })
+        .eq("id", item.productId);
+    }
+
     // Send notification email to owner via Resend
     const RESEND_API_KEY = process.env.RESEND_API_KEY;
     if (RESEND_API_KEY) {
