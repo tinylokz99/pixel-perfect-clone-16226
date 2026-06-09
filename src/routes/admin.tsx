@@ -21,7 +21,9 @@ type Product = {
   coa_url: string | null;
   sort_order: number;
   is_kit: boolean;
+  stock_quantity: number | null;
 };
+
 
 type Order = {
   id: string;
