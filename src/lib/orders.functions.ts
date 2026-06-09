@@ -26,11 +26,29 @@ export const createOrder = createServerFn({ method: "POST" })
     const subtotal_cents = data.items.reduce((s, i) => s + i.price_cents * i.quantity, 0);
     if (subtotal_cents <= 0) throw new Error("Invalid order total");
 
+    // Inventory check: for any product with a tracked stock_quantity, ensure enough on hand.
+    const productIds = data.items.map((i) => i.productId);
+    const { data: stockRows, error: stockErr } = await supabaseAdmin
+      .from("products")
+      .select("id, name, stock_quantity, in_stock")
+      .in("id", productIds);
+    if (stockErr) throw new Error(stockErr.message);
+    const stockById = new Map((stockRows ?? []).map((p) => [p.id, p]));
+    for (const item of data.items) {
+      const p = stockById.get(item.productId);
+      if (!p) throw new Error(`Product unavailable: ${item.name}`);
+      if (!p.in_stock) throw new Error(`Out of stock: ${p.name}`);
+      if (p.stock_quantity !== null && p.stock_quantity < item.quantity) {
+        throw new Error(`Only ${p.stock_quantity} of "${p.name}" in stock`);
+      }
+    }
+
     const { data: settings } = await supabaseAdmin
       .from("store_settings")
       .select("shipping_enabled, shipping_cents, discounts_enabled, invoice_recipients")
       .eq("id", 1)
       .single();
+
 
 
     const shipping_cents = settings?.shipping_enabled ? (settings.shipping_cents ?? 0) : 0;
