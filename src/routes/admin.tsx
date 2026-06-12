@@ -339,12 +339,15 @@ function OrdersList({ orders, onChange }: { orders: Order[]; onChange: () => voi
               <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString()} · {o.payment_method.toUpperCase()}</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${o.status === "paid" ? "bg-emerald-500/20 text-emerald-300" : o.status === "shipped" ? "bg-blue-500/20 text-blue-300" : o.status === "cancelled" ? "bg-destructive/20 text-destructive" : "bg-amber-500/20 text-amber-300"}`}>{o.status.replace("_", " ")}</span>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${o.status === "paid" ? "bg-emerald-500/20 text-emerald-300" : o.status === "processing" ? "bg-indigo-500/20 text-indigo-300" : o.status === "shipped" ? "bg-blue-500/20 text-blue-300" : o.status === "delivered" ? "bg-teal-500/20 text-teal-300" : o.status === "refunded" ? "bg-purple-500/20 text-purple-300" : o.status === "cancelled" ? "bg-destructive/20 text-destructive" : "bg-amber-500/20 text-amber-300"}`}>{o.status.replace(/_/g, " ")}</span>
               <select value={o.status} onChange={(e) => setStatus(o.id, e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-xs">
                 <option value="awaiting_payment">Awaiting payment</option>
                 <option value="paid">Paid</option>
+                <option value="processing">Processing</option>
                 <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="refunded">Refunded</option>
               </select>
             </div>
           </div>
@@ -399,6 +402,7 @@ function SettingsPanel() {
   const [shippingEnabled, setShippingEnabled] = useState(true);
   const [discountsEnabled, setDiscountsEnabled] = useState(true);
   const [invoiceRecipients, setInvoiceRecipients] = useState("");
+  const [lowStockThreshold, setLowStockThreshold] = useState("3");
   const [savedOnce, setSavedOnce] = useState(false);
 
   useEffect(() => {
@@ -407,6 +411,7 @@ function SettingsPanel() {
       setShippingEnabled(!!settings.shipping_enabled);
       setDiscountsEnabled(!!settings.discounts_enabled);
       setInvoiceRecipients(((settings as any).invoice_recipients ?? []).join(", "));
+      setLowStockThreshold(String((settings as any).low_stock_threshold ?? 3));
       setSavedOnce(true);
     }
   }, [settings, savedOnce]);
@@ -421,11 +426,13 @@ function SettingsPanel() {
     const invalid = emails.filter((e) => !emailRe.test(e));
     if (invalid.length) { toast.error(`Invalid email(s): ${invalid.join(", ")}`); return; }
     if (emails.length === 0) { toast.error("Add at least one invoice recipient email"); return; }
+    const threshold = Math.max(0, Math.floor(Number(lowStockThreshold) || 0));
     const { error } = await supabase.from("store_settings").update({
       shipping_enabled: shippingEnabled,
       shipping_cents: cents,
       discounts_enabled: discountsEnabled,
       invoice_recipients: emails,
+      low_stock_threshold: threshold,
       updated_at: new Date().toISOString(),
     } as any).eq("id", 1);
     if (error) toast.error(error.message);
@@ -464,7 +471,18 @@ function SettingsPanel() {
             placeholder="owner@example.com, manager@example.com"
             className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
           />
-          <span className="mt-1 block text-xs text-muted-foreground">Comma- or space-separated. These addresses receive the order invoice email when a customer checks out.</span>
+          <span className="mt-1 block text-xs text-muted-foreground">Comma- or space-separated. These addresses receive the order invoice AND low-stock alerts.</span>
+        </label>
+
+        <label className="block text-sm max-w-xs">
+          <span className="mb-1 block font-semibold text-foreground">Low-stock alert threshold</span>
+          <input
+            type="number" min="0" step="1"
+            value={lowStockThreshold}
+            onChange={(e) => setLowStockThreshold(e.target.value)}
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+          />
+          <span className="mt-1 block text-xs text-muted-foreground">Email is sent when a tracked product drops to this many units (or fewer) after an order.</span>
         </label>
 
         <button onClick={saveSettings} className="inline-flex h-10 items-center justify-center rounded-md bg-primary px-5 text-sm font-semibold text-primary-foreground">Save settings</button>

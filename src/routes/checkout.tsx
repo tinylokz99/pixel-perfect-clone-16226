@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/lib/cart";
 import { formatPrice, OWNER_EMAIL, OWNER_WHATSAPP_DISPLAY, PAYMENT_METHODS, type PaymentMethodId, whatsappLink } from "@/lib/site";
 import { createOrder } from "@/lib/orders.functions";
 import { validateDiscountCode } from "@/lib/discount.functions";
+import { getPublicStoreSettings } from "@/lib/settings.functions";
 import { toast } from "sonner";
 import qrCashapp from "@/assets/qr-cashapp.png";
 import qrVenmo from "@/assets/qr-venmo.png";
@@ -49,15 +49,7 @@ function Checkout() {
 
   const { data: settings } = useQuery({
     queryKey: ["store-settings"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_settings")
-        .select("shipping_enabled, shipping_cents, discounts_enabled")
-        .eq("id", 1)
-        .maybeSingle();
-      if (error) throw error;
-      return data ?? { shipping_enabled: false, shipping_cents: 0, discounts_enabled: false };
-    },
+    queryFn: () => getPublicStoreSettings(),
   });
 
   const shippingCents = settings?.shipping_enabled ? settings.shipping_cents : 0;

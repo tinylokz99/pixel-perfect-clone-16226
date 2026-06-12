@@ -151,6 +151,7 @@ export type Database = {
           discounts_enabled: boolean
           id: number
           invoice_recipients: string[]
+          low_stock_threshold: number
           shipping_cents: number
           shipping_enabled: boolean
           updated_at: string
@@ -159,6 +160,7 @@ export type Database = {
           discounts_enabled?: boolean
           id?: number
           invoice_recipients?: string[]
+          low_stock_threshold?: number
           shipping_cents?: number
           shipping_enabled?: boolean
           updated_at?: string
@@ -167,6 +169,7 @@ export type Database = {
           discounts_enabled?: boolean
           id?: number
           invoice_recipients?: string[]
+          low_stock_threshold?: number
           shipping_cents?: number
           shipping_enabled?: boolean
           updated_at?: string
