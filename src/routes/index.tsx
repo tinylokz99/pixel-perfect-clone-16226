@@ -4,22 +4,31 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/lib/cart";
 import { formatPrice, OWNER_EMAIL, OWNER_WHATSAPP_DISPLAY, whatsappLink } from "@/lib/site";
 import { toast } from "sonner";
-import badgeCircle from "@/assets/badge-circle.png";
 import bottleHero from "@/assets/bottle-hero.png";
 
-const siteUrl = "https://pixel-perfect-clone-16226.lovable.app";
+const siteUrl = "https://jalapenopeptides.com";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "Jalapeno Peptides | Premium Research Peptides" },
-      { name: "description", content: "Premium research peptides for laboratory research purposes only." },
+      { name: "description", content: "Premium research peptides for laboratory and in-vitro research use only. Browse our catalog of high-purity compounds." },
       { property: "og:title", content: "Jalapeno Peptides | Premium Research Peptides" },
-      { property: "og:description", content: "Premium research peptides for laboratory research purposes only." },
+      { property: "og:description", content: "Premium research peptides for laboratory and in-vitro research use only." },
       { property: "og:url", content: siteUrl },
-      { property: "og:image", content: `${siteUrl}${bottleHero}` },
     ],
     links: [{ rel: "canonical", href: siteUrl }],
+    scripts: [{
+      type: "application/ld+json",
+      children: JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        name: "Jalapeno Peptides",
+        url: siteUrl,
+        email: "tinylokzja@gmail.com",
+        description: "Premium research peptides for laboratory and in-vitro research use only.",
+      }),
+    }],
   }),
   component: Index,
 });
@@ -91,7 +100,7 @@ function Index() {
               <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {products.map((p) => (
                   <article key={p.id} className="group flex flex-col overflow-hidden rounded-[20px] border border-border bg-card/70 transition hover:-translate-y-1 hover:border-primary/45">
-                    <div className="relative aspect-square overflow-hidden border-b border-border/70 bg-background/50">
+                    <Link to="/product/$slug" params={{ slug: p.slug }} className="relative aspect-square overflow-hidden border-b border-border/70 bg-background/50 block">
                       {p.image_url ? (
                         <img src={p.image_url} alt={p.name} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
                       ) : (
@@ -102,16 +111,23 @@ function Index() {
                           <span className="rounded-full border border-border bg-card px-4 py-1 text-xs font-bold uppercase tracking-[0.22em] text-foreground">Out of stock</span>
                         </div>
                       )}
-                    </div>
+                    </Link>
                     <div className="flex flex-1 flex-col p-5">
-                      <h3 className="text-xl font-black uppercase text-foreground">{p.name}</h3>
-                      {p.description && <p className="mt-2 text-sm leading-6 text-muted-foreground">{p.description}</p>}
-                      {p.coa_url && (
-                        <a href={p.coa_url} target="_blank" rel="noreferrer" className="mt-2 inline-flex w-fit items-center gap-1 rounded-md border border-primary/30 px-2 py-1 text-xs font-semibold text-primary">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M10 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg>
-                          View COA
-                        </a>
-                      )}
+                      <Link to="/product/$slug" params={{ slug: p.slug }} className="text-xl font-black uppercase text-foreground hover:text-primary">
+                        <h3>{p.name}</h3>
+                      </Link>
+                      {p.description && <p className="mt-2 line-clamp-3 text-sm leading-6 text-muted-foreground">{p.description}</p>}
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        <Link to="/product/$slug" params={{ slug: p.slug }} className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-xs font-semibold text-muted-foreground hover:text-foreground">
+                          Details
+                        </Link>
+                        {p.coa_url && (
+                          <a href={p.coa_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/5 px-2 py-1 text-xs font-semibold text-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/></svg>
+                            COA
+                          </a>
+                        )}
+                      </div>
                       <div className="mt-auto pt-5 flex items-center justify-between gap-3">
                         {p.is_kit ? (
                           <span className="text-sm font-bold uppercase tracking-wider text-primary">Price upon request</span>
@@ -173,18 +189,6 @@ function Index() {
         </section>
       </main>
 
-      <footer className="bg-background py-10 border-t border-border/70">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <img src={badgeCircle} alt="" className="h-8 w-8 rounded" />
-            <p className="text-sm text-muted-foreground">© Jalapeno Peptides · Research use only</p>
-          </div>
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <Link to="/cart" className="hover:text-foreground">Cart</Link>
-            <Link to="/admin" className="hover:text-foreground">Admin</Link>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
