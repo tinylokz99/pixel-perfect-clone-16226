@@ -202,14 +202,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      get_public_store_settings: {
-        Args: never
-        Returns: {
-          discounts_enabled: boolean
-          shipping_cents: number
-          shipping_enabled: boolean
-        }[]
-      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
