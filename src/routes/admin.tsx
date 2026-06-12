@@ -339,12 +339,15 @@ function OrdersList({ orders, onChange }: { orders: Order[]; onChange: () => voi
               <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString()} · {o.payment_method.toUpperCase()}</p>
             </div>
             <div className="flex items-center gap-2">
-              <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${o.status === "paid" ? "bg-emerald-500/20 text-emerald-300" : o.status === "shipped" ? "bg-blue-500/20 text-blue-300" : o.status === "cancelled" ? "bg-destructive/20 text-destructive" : "bg-amber-500/20 text-amber-300"}`}>{o.status.replace("_", " ")}</span>
+              <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase ${o.status === "paid" ? "bg-emerald-500/20 text-emerald-300" : o.status === "processing" ? "bg-indigo-500/20 text-indigo-300" : o.status === "shipped" ? "bg-blue-500/20 text-blue-300" : o.status === "delivered" ? "bg-teal-500/20 text-teal-300" : o.status === "refunded" ? "bg-purple-500/20 text-purple-300" : o.status === "cancelled" ? "bg-destructive/20 text-destructive" : "bg-amber-500/20 text-amber-300"}`}>{o.status.replace(/_/g, " ")}</span>
               <select value={o.status} onChange={(e) => setStatus(o.id, e.target.value)} className="rounded-md border border-border bg-background px-2 py-1 text-xs">
                 <option value="awaiting_payment">Awaiting payment</option>
                 <option value="paid">Paid</option>
+                <option value="processing">Processing</option>
                 <option value="shipped">Shipped</option>
+                <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="refunded">Refunded</option>
               </select>
             </div>
           </div>
