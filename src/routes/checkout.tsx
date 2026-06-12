@@ -49,15 +49,7 @@ function Checkout() {
 
   const { data: settings } = useQuery({
     queryKey: ["store-settings"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_settings")
-        .select("shipping_enabled, shipping_cents, discounts_enabled")
-        .eq("id", 1)
-        .maybeSingle();
-      if (error) throw error;
-      return data ?? { shipping_enabled: false, shipping_cents: 0, discounts_enabled: false };
-    },
+    queryFn: () => getPublicStoreSettings(),
   });
 
   const shippingCents = settings?.shipping_enabled ? settings.shipping_cents : 0;
