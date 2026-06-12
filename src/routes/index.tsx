@@ -189,18 +189,6 @@ function Index() {
         </section>
       </main>
 
-      <footer className="bg-background py-10 border-t border-border/70">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <img src={badgeCircle} alt="" className="h-8 w-8 rounded" />
-            <p className="text-sm text-muted-foreground">© Jalapeno Peptides · Research use only</p>
-          </div>
-          <div className="flex gap-4 text-sm text-muted-foreground">
-            <Link to="/cart" className="hover:text-foreground">Cart</Link>
-            <Link to="/admin" className="hover:text-foreground">Admin</Link>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
