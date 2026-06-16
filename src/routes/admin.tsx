@@ -31,9 +31,15 @@ type Order = {
   customer_name: string;
   customer_email: string;
   customer_phone: string | null;
+  shipping_address: string | null;
+  notes: string | null;
   payment_method: string;
   status: string;
   subtotal_cents: number;
+  shipping_cents: number;
+  discount_cents: number;
+  discount_code: string | null;
+  total_cents: number;
   items: { name: string; quantity: number; price_cents: number }[];
   created_at: string;
 };
@@ -352,10 +358,24 @@ function OrdersList({ orders, onChange }: { orders: Order[]; onChange: () => voi
             </div>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <div className="text-sm">
-              <p className="font-semibold text-foreground">{o.customer_name}</p>
-              <p className="text-muted-foreground">{o.customer_email}</p>
-              {o.customer_phone && <p className="text-muted-foreground">{o.customer_phone}</p>}
+            <div className="text-sm space-y-2">
+              <div>
+                <p className="font-semibold text-foreground">{o.customer_name}</p>
+                <p className="text-muted-foreground">{o.customer_email}</p>
+                {o.customer_phone && <p className="text-muted-foreground">{o.customer_phone}</p>}
+              </div>
+              {o.shipping_address && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Ship to</p>
+                  <p className="whitespace-pre-wrap text-foreground">{o.shipping_address}</p>
+                </div>
+              )}
+              {o.notes && (
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Notes</p>
+                  <p className="whitespace-pre-wrap text-muted-foreground">{o.notes}</p>
+                </div>
+              )}
             </div>
             <div className="text-sm">
               <ul className="space-y-1">
@@ -366,8 +386,24 @@ function OrdersList({ orders, onChange }: { orders: Order[]; onChange: () => voi
                   </li>
                 ))}
                 <li className="flex justify-between border-t border-border pt-1 mt-1">
+                  <span className="text-muted-foreground">Subtotal</span>
+                  <span className="text-foreground">{formatPrice(o.subtotal_cents)}</span>
+                </li>
+                {o.discount_cents > 0 && (
+                  <li className="flex justify-between text-emerald-400">
+                    <span>Discount{o.discount_code ? ` (${o.discount_code})` : ""}</span>
+                    <span>−{formatPrice(o.discount_cents)}</span>
+                  </li>
+                )}
+                {o.shipping_cents > 0 && (
+                  <li className="flex justify-between">
+                    <span className="text-muted-foreground">Shipping &amp; handling</span>
+                    <span className="text-foreground">{formatPrice(o.shipping_cents)}</span>
+                  </li>
+                )}
+                <li className="flex justify-between border-t border-border pt-1 mt-1">
                   <span className="font-semibold text-foreground">Total</span>
-                  <span className="font-black text-foreground">{formatPrice(o.subtotal_cents)}</span>
+                  <span className="font-black text-foreground">{formatPrice(o.total_cents || o.subtotal_cents)}</span>
                 </li>
               </ul>
             </div>
@@ -377,6 +413,7 @@ function OrdersList({ orders, onChange }: { orders: Order[]; onChange: () => voi
     </div>
   );
 }
+
 
 function SettingsPanel() {
   const qc = useQueryClient();
