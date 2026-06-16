@@ -31,9 +31,15 @@ type Order = {
   customer_name: string;
   customer_email: string;
   customer_phone: string | null;
+  shipping_address: string | null;
+  notes: string | null;
   payment_method: string;
   status: string;
   subtotal_cents: number;
+  shipping_cents: number;
+  discount_cents: number;
+  discount_code: string | null;
+  total_cents: number;
   items: { name: string; quantity: number; price_cents: number }[];
   created_at: string;
 };
