@@ -12,8 +12,8 @@ const ItemSchema = z.object({
 const InputSchema = z.object({
   customer_name: z.string().trim().min(1).max(120),
   customer_email: z.string().trim().email().max(255),
-  customer_phone: z.string().trim().max(40).optional().or(z.literal("")),
-  shipping_address: z.string().trim().max(1000).optional().or(z.literal("")),
+  customer_phone: z.string().trim().min(7, "Phone is required").max(40),
+  shipping_address: z.string().trim().min(5, "Shipping address is required").max(1000),
   notes: z.string().trim().max(1000).optional().or(z.literal("")),
   payment_method: z.enum(["cashapp", "venmo", "paypal", "zelle"]),
   items: z.array(ItemSchema).min(1).max(50),
