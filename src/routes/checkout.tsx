@@ -160,12 +160,12 @@ function Checkout() {
               <input required type="email" maxLength={255} value={form.customer_email} onChange={(e) => setForm({ ...form, customer_email: e.target.value })} className={inputCls} />
             </label>
             <label className="block text-sm sm:col-span-2">
-              <span className="mb-1 block font-semibold text-foreground">Phone (optional)</span>
-              <input type="tel" maxLength={40} value={form.customer_phone} onChange={(e) => setForm({ ...form, customer_phone: e.target.value })} className={inputCls} />
+              <span className="mb-1 block font-semibold text-foreground">Phone *</span>
+              <input required type="tel" maxLength={40} value={form.customer_phone} onChange={(e) => setForm({ ...form, customer_phone: e.target.value })} className={inputCls} placeholder="(555) 123-4567" />
             </label>
             <label className="block text-sm sm:col-span-2">
-              <span className="mb-1 block font-semibold text-foreground">Shipping address (optional)</span>
-              <textarea rows={3} maxLength={1000} value={form.shipping_address} onChange={(e) => setForm({ ...form, shipping_address: e.target.value })} className={inputCls} />
+              <span className="mb-1 block font-semibold text-foreground">Shipping address *</span>
+              <textarea required rows={3} maxLength={1000} value={form.shipping_address} onChange={(e) => setForm({ ...form, shipping_address: e.target.value })} className={inputCls} placeholder="Street address, city, state, ZIP, country" />
             </label>
             <label className="block text-sm sm:col-span-2">
               <span className="mb-1 block font-semibold text-foreground">Notes (optional)</span>
